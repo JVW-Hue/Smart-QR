@@ -350,7 +350,6 @@
     </div>
     
     <div class="container">
-        {% csrf_token %}
         
         <div class="input-group">
             <input type="text" id="content" class="main-input" placeholder="Paste your link / Wi-Fi password" maxlength="500">
@@ -407,8 +406,7 @@
                 const response = await fetch('/generate/', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken') || 'dummy-token'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         content: content,
@@ -552,8 +550,7 @@
                 const response = await fetch('/generate/', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCSRFToken()
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         content: content,
