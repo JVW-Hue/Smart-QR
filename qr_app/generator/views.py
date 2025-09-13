@@ -15,44 +15,48 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 def home(request):
     return render(request, 'generator/home.html')
 
+@csrf_exempt
 def generate_qr(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        content = data.get('content', '')
-        color = data.get('color', '#000000')
-        bg_color = data.get('background_color', '#ffffff')
-        
-        if not content:
-            return JsonResponse({'error': 'Content is required'}, status=400)
-        
-        # Create QR code
-        qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        qr.add_data(content)
-        qr.make(fit=True)
-        
-        # Generate QR image
-        qr_img = qr.make_image(fill_color=color, back_color=bg_color)
-        
-        # Add watermark for free version
-        watermarked_img = add_watermark(qr_img)
-        
-        # Convert to base64
-        buffer = io.BytesIO()
-        watermarked_img.save(buffer, format='PNG')
-        img_str = base64.b64encode(buffer.getvalue()).decode()
-        
-        # Save to database
-        qr_code = QRCode.objects.create(
-            content=content,
-            color=color,
-            background_color=bg_color
-        )
-        
-        return JsonResponse({
-            'success': True,
-            'qr_id': str(qr_code.id),
-            'image': f'data:image/png;base64,{img_str}'
-        })
+        try:
+            data = json.loads(request.body)
+            content = data.get('content', '')
+            color = data.get('color', '#000000')
+            bg_color = data.get('background_color', '#ffffff')
+            
+            if not content:
+                return JsonResponse({'error': 'Content is required'}, status=400)
+            
+            # Create QR code
+            qr = qrcode.QRCode(version=1, box_size=10, border=5)
+            qr.add_data(content)
+            qr.make(fit=True)
+            
+            # Generate QR image
+            qr_img = qr.make_image(fill_color=color, back_color=bg_color)
+            
+            # Add watermark for free version
+            watermarked_img = add_watermark(qr_img)
+            
+            # Convert to base64
+            buffer = io.BytesIO()
+            watermarked_img.save(buffer, format='PNG')
+            img_str = base64.b64encode(buffer.getvalue()).decode()
+            
+            # Save to database
+            qr_code = QRCode.objects.create(
+                content=content,
+                color=color,
+                background_color=bg_color
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'qr_id': str(qr_code.id),
+                'image': f'data:image/png;base64,{img_str}'
+            })
+        except Exception as e:
+            return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
     
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
