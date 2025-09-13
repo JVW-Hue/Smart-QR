@@ -350,6 +350,7 @@
     </div>
     
     <div class="container">
+        {% csrf_token %}
         
         <div class="input-group">
             <input type="text" id="content" class="main-input" placeholder="Paste your link / Wi-Fi password" maxlength="500">
@@ -407,7 +408,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
+                        'X-CSRFToken': getCookie('csrftoken') || 'dummy-token'
                     },
                     body: JSON.stringify({
                         content: content,
@@ -525,6 +526,56 @@
                 }
             }
             return cookieValue;
+        }
+
+        // Get CSRF token from meta tag or cookie
+        function getCSRFToken() {
+            const token = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            return token || getCookie('csrftoken') || 'dummy-token';
+        }
+
+        // Update CSRF token usage
+        async function generateQR() {
+            const content = document.getElementById('content').value.trim();
+            const color = document.getElementById('qr-color').value;
+            const bgColor = document.getElementById('bg-color').value;
+            
+            if (!content) {
+                showError('Please enter some content for your QR code');
+                return;
+            }
+            
+            showLoading(true);
+            hideError();
+            
+            try {
+                const response = await fetch('/generate/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        content: content,
+                        color: color,
+                        background_color: bgColor
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentQRId = data.qr_id;
+                    document.getElementById('qr-image').src = data.image;
+                    document.getElementById('qr-result').style.display = 'block';
+                } else {
+                    showError(data.error || 'Failed to generate QR code');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+            } finally {
+                showLoading(false);
+            }
         }
     </script>
 </body>
