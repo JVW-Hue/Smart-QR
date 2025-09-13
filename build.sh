@@ -8,5 +8,6 @@ pip install --no-build-isolation Pillow==10.4.0
 pip install stripe==7.8.0
 pip install python-decouple==3.8
 pip install gunicorn==21.2.0
-python manage.py collectstatic --noinput
+python manage.py makemigrations
 python manage.py migrate
+python manage.py collectstatic --noinput
